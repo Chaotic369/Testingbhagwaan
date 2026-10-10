@@ -1,0 +1,1225 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  :root {
+    --bg-base: #090a10;
+    --card-bg: rgba(22, 24, 38, 0.72);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --card-glow: rgba(139, 92, 246, 0.25);
+    --accent: #8b5cf6;
+    --accent-glow: #a78bfa;
+    --accent-gradient: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #f43f5e 100%);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-sub: #64748b;
+    --track-bar: rgba(255, 255, 255, 0.12);
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Ambient Aurora Lights */
+  .aurora-container {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .aurora-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.5;
+    transition: all 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .orb-1 {
+    width: 520px;
+    height: 520px;
+    top: -100px;
+    left: 15%;
+    background: radial-gradient(circle, #6366f1 0%, transparent 70%);
+  }
+
+  .orb-2 {
+    width: 480px;
+    height: 480px;
+    bottom: -80px;
+    right: 15%;
+    background: radial-gradient(circle, #ec4899 0%, transparent 70%);
+  }
+
+  .orb-3 {
+    width: 380px;
+    height: 380px;
+    top: 40%;
+    left: 45%;
+    background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+  }
+
+  /* Master Container */
+  .app-layout {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 960px;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .player-card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(32px) saturate(180%);
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+    border-radius: 36px;
+    padding: 32px 28px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55),
+                0 0 60px var(--card-glow);
+    transition: box-shadow 0.6s ease, border-color 0.6s ease;
+    overflow: hidden;
+  }
+
+  /* Header Top Bar */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .icon-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+  }
+
+  .icon-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .icon-btn:active {
+    transform: scale(0.94);
+  }
+
+  .icon-btn.active {
+    color: #ec4899;
+    background: rgba(236, 72, 153, 0.15);
+    border-color: rgba(236, 72, 153, 0.35);
+  }
+
+  .top-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* Album Artwork & Visuals */
+  .artwork-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 300px;
+    margin: 0 auto 28px auto;
+    perspective: 1000px;
+  }
+
+  .vinyl-disc {
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    top: 5%;
+    right: 5%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #1a1a24 0%, #0a0a0f 40%, #050508 100%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateX(0);
+  }
+
+  .player-card.playing .vinyl-disc {
+    transform: translateX(45px) rotate(360deg);
+    animation: spinVinyl 16s linear infinite;
+  }
+
+  @keyframes spinVinyl {
+    from { transform: translateX(45px) rotate(0deg); }
+    to { transform: translateX(45px) rotate(360deg); }
+  }
+
+  .vinyl-disc::before {
+    content: '';
+    position: absolute;
+    inset: 15px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+  }
+
+  .vinyl-center {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    border: 4px solid #111;
+    box-shadow: 0 0 15px rgba(0,0,0,0.6);
+  }
+
+  .album-art-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 26px;
+    overflow: hidden;
+    z-index: 2;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #1e1b2e;
+    transition: transform 0.4s ease;
+  }
+
+  .album-art {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scale(1.02);
+    transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .player-card.playing .album-art-wrap {
+    transform: scale(0.98);
+  }
+
+  /* Audio Visualizer Canvas Overlay */
+  .visualizer-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0.85;
+    background: linear-gradient(to top, rgba(15, 17, 26, 0.8), transparent);
+  }
+
+  canvas#vizCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Track Metadata */
+  .track-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+
+  .track-meta {
+    overflow: hidden;
+    padding-right: 12px;
+  }
+
+  .track-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+
+  .track-artist {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .like-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-sub);
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s;
+  }
+
+  .like-button svg {
+    width: 24px;
+    height: 24px;
+    transition: fill 0.3s ease;
+  }
+
+  .like-button.liked {
+    color: #f43f5e;
+    transform: scale(1.15);
+  }
+
+  .like-button.liked svg {
+    fill: #f43f5e;
+  }
+
+  /* Progress Bar */
+  .progress-section {
+    margin-bottom: 24px;
+  }
+
+  .progress-bar-container {
+    position: relative;
+    height: 8px;
+    background: var(--track-bar);
+    border-radius: 99px;
+    cursor: pointer;
+    overflow: visible;
+    padding: 10px 0;
+    background-clip: content-box;
+  }
+
+  .progress-fill {
+    position: absolute;
+    left: 0;
+    top: 10px;
+    height: 8px;
+    width: 0%;
+    background: var(--accent-gradient);
+    border-radius: 99px;
+    box-shadow: 0 0 12px rgba(236, 72, 153, 0.5);
+    transition: width 0.1s linear;
+  }
+
+  .progress-scrubber {
+    position: absolute;
+    top: 50%;
+    right: -6px;
+    transform: translateY(-50%) scale(0);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .progress-bar-container:hover .progress-scrubber {
+    transform: translateY(-50%) scale(1);
+  }
+
+  .time-stamps {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-sub);
+    margin-top: 4px;
+  }
+
+  /* Control Center */
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding: 0 4px;
+  }
+
+  .control-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.25s ease;
+    padding: 8px;
+  }
+
+  .control-btn:hover {
+    color: var(--text-main);
+    transform: scale(1.1);
+  }
+
+  .control-btn:active {
+    transform: scale(0.92);
+  }
+
+  .control-btn.active {
+    color: var(--accent-glow);
+    text-shadow: 0 0 8px var(--accent-glow);
+  }
+
+  .control-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .play-pause-btn {
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(236, 72, 153, 0.4),
+                inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .play-pause-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 14px 32px rgba(236, 72, 153, 0.6),
+                inset 0 1px 2px rgba(255, 255, 255, 0.45);
+  }
+
+  .play-pause-btn:active {
+    transform: scale(0.95);
+  }
+
+  .play-pause-btn svg {
+    width: 28px;
+    height: 28px;
+    fill: currentColor;
+    margin-left: 2px;
+  }
+
+  .player-card.playing .play-pause-btn svg {
+    margin-left: 0;
+  }
+
+  /* Bottom Utility: Volume Slider */
+  .bottom-tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .volume-btn {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+
+  .volume-btn:hover {
+    color: var(--text-main);
+  }
+
+  .volume-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .vol-slider-wrap {
+    flex: 1;
+    position: relative;
+    height: 6px;
+    background: var(--track-bar);
+    border-radius: 99px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  .vol-fill {
+    height: 100%;
+    width: 80%;
+    background: #cbd5e1;
+    border-radius: 99px;
+    transition: background 0.2s ease;
+  }
+
+  .vol-slider-wrap:hover .vol-fill {
+    background: var(--accent-glow);
+  }
+
+  .badge-tag {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Playlist Drawer Modal */
+  .playlist-drawer {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 17, 26, 0.95);
+    backdrop-filter: blur(28px);
+    border-radius: 36px;
+    padding: 32px 24px;
+    z-index: 50;
+    transform: translateY(105%);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .playlist-drawer.open {
+    transform: translateY(0);
+  }
+
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .drawer-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .drawer-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .drawer-list::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .drawer-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 99px;
+  }
+
+  .track-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    border: 1px solid transparent;
+  }
+
+  .track-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .track-item.active {
+    background: rgba(139, 92, 246, 0.12);
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+
+  .track-item-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+
+  .track-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .track-item-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-item.active .track-item-name {
+    color: var(--accent-glow);
+  }
+
+  .track-item-sub {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+  }
+
+  .track-item-duration {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<div class="aurora-container">
+  <div class="aurora-orb orb-1" id="orb1"></div>
+  <div class="aurora-orb orb-2" id="orb2"></div>
+  <div class="aurora-orb orb-3" id="orb3"></div>
+</div>
+
+<div class="app-layout">
+  <div class="player-card" id="playerCard">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <button class="icon-btn" id="playlistToggle" title="Queue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+      </button>
+
+      <span class="top-title">Now Playing</span>
+
+      <button class="icon-btn" id="eqToggle" title="Visualizer Pulse">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2v20M17 5v14M7 9v6M22 10v4M2 11v2"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Artwork Section -->
+    <div class="artwork-container">
+      <div class="vinyl-disc">
+        <div class="vinyl-center"></div>
+      </div>
+      <div class="album-art-wrap">
+        <img src="" alt="Album Art" id="albumCover" class="album-art" />
+        <div class="visualizer-overlay">
+          <canvas id="vizCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Track Metadata & Favorite -->
+    <div class="track-info">
+      <div class="track-meta">
+        <div class="track-title" id="trackTitle">Midnight Reverie</div>
+        <div class="track-artist" id="trackArtist">Komorebi & Lofi Echo</div>
+      </div>
+      <button class="like-button" id="likeBtn" aria-label="Like song">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Timeline Progress -->
+    <div class="progress-section">
+      <div class="progress-bar-container" id="progressBar">
+        <div class="progress-fill" id="progressFill">
+          <div class="progress-scrubber"></div>
+        </div>
+      </div>
+      <div class="time-stamps">
+        <span id="currentTime">0:00</span>
+        <span id="totalDuration">2:45</span>
+      </div>
+    </div>
+
+    <!-- Main Controls -->
+    <div class="controls-row">
+      <button class="control-btn" id="shuffleBtn" title="Shuffle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 3 21 3 21 8"></polyline>
+          <line x1="4" y1="20" x2="21" y2="3"></line>
+          <polyline points="21 16 21 21 16 21"></polyline>
+          <line x1="15" y1="15" x2="21" y2="21"></line>
+          <line x1="4" y1="4" x2="9" y2="9"></line>
+        </svg>
+      </button>
+
+      <button class="control-btn" id="prevBtn" title="Previous">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="19 20 9 12 19 4 19 20"></polygon>
+          <line x1="5" y1="19" x2="5" y2="5"></line>
+        </svg>
+      </button>
+
+      <button class="play-pause-btn" id="playBtn" title="Play">
+        <svg id="playIcon" viewBox="0 0 24 24">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+      </button>
+
+      <button class="control-btn" id="nextBtn" title="Next">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 4 15 12 5 20 5 4"></polygon>
+          <line x1="19" y1="5" x2="19" y2="19"></line>
+        </svg>
+      </button>
+
+      <button class="control-btn" id="loopBtn" title="Repeat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"></polyline>
+          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+          <polyline points="7 23 3 19 7 15"></polyline>
+          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Volume & Status -->
+    <div class="bottom-tools">
+      <button class="volume-btn" id="volBtn" title="Mute/Unmute">
+        <svg id="volIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+      </button>
+
+      <div class="vol-slider-wrap" id="volTrack">
+        <div class="vol-fill" id="volFill" style="width: 75%;"></div>
+      </div>
+
+      <span class="badge-tag" id="audioQuality">HI-RES • 320K</span>
+    </div>
+
+    <!-- Playlist Flyout -->
+    <div class="playlist-drawer" id="playlistDrawer">
+      <div class="drawer-header">
+        <div class="drawer-title">Queue & Playlist</div>
+        <button class="icon-btn" id="closeDrawer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="drawer-list" id="drawerList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // High-aesthetic Curated Track List with Generated SVG Cover Visuals
+  const TRACKS = [
+    {
+      id: 0,
+      title: 'Midnight Reverie',
+      artist: 'Komorebi & Lofi Echo',
+      duration: 168, // in seconds
+      theme: {
+        glow: 'rgba(139, 92, 246, 0.35)',
+        accent1: '#6366f1',
+        accent2: '#ec4899',
+        orb1: '#6366f1',
+        orb2: '#ec4899',
+        orb3: '#8b5cf6'
+      },
+      bpm: 80,
+      chords: [261.63, 329.63, 392.00, 493.88], // Cmaj7, lofi vibes
+      coverSvg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><radialGradient id="g1" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="%238b5cf6"/><stop offset="50%" stop-color="%233b82f6"/><stop offset="100%" stop-color="%23090a10"/></radialGradient><filter id="f"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise"/><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.15 0"/></filter></defs><rect width="600" height="600" fill="url(%23g1)"/><circle cx="450" cy="180" r="140" fill="%23ec4899" opacity="0.6"/><path d="M0,450 Q150,380 300,430 T600,410 L600,600 L0,600 Z" fill="%230f111a" opacity="0.9"/><circle cx="200" cy="220" r="5" fill="%23fff" opacity="0.8"/><circle cx="280" cy="150" r="3" fill="%23fff" opacity="0.6"/><circle cx="380" cy="260" r="4" fill="%23fff" opacity="0.5"/><rect width="600" height="600" filter="url(%23f)"/></svg>`
+    },
+    {
+      id: 1,
+      title: 'Neon Horizon',
+      artist: 'Aether Wave & Sylph',
+      duration: 195,
+      theme: {
+        glow: 'rgba(236, 72, 153, 0.4)',
+        accent1: '#f43f5e',
+        accent2: '#f59e0b',
+        orb1: '#f43f5e',
+        orb2: '#fbbf24',
+        orb3: '#d946ef'
+      },
+      bpm: 110,
+      chords: [293.66, 369.99, 440.00, 554.37], // Dmaj7 synthwave
+      coverSvg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="%23f43f5e"/><stop offset="50%" stop-color="%238b5cf6"/><stop offset="100%" stop-color="%23090d16"/></linearGradient></defs><rect width="600" height="600" fill="url(%23g2)"/><polygon points="300,120 480,480 120,480" fill="none" stroke="%23fbbf24" stroke-width="8" opacity="0.75"/><circle cx="300" cy="340" r="90" fill="%23f43f5e" opacity="0.5"/><line x1="60" y1="480" x2="540" y2="480" stroke="%23fff" stroke-width="2" opacity="0.3"/></svg>`
+    },
+    {
+      id: 2,
+      title: 'Starlight Sanctuary',
+      artist: 'Solaris & Celestial Drift',
+      duration: 220,
+      theme: {
+        glow: 'rgba(16, 185, 129, 0.35)',
+        accent1: '#10b981',
+        accent2: '#06b6d4',
+        orb1: '#059669',
+        orb2: '#0284c7',
+        orb3: '#10b981'
+      },
+      bpm: 72,
+      chords: [220.00, 261.63, 329.63, 392.00], // Amin7 deep calm
+      coverSvg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><radialGradient id="g3" cx="50%" cy="50%" r="65%"><stop offset="0%" stop-color="%2310b981"/><stop offset="60%" stop-color="%23083344"/><stop offset="100%" stop-color="%23020617"/></radialGradient></defs><rect width="600" height="600" fill="url(%23g3)"/><circle cx="300" cy="300" r="180" fill="none" stroke="%2338bdf8" stroke-width="4" stroke-dasharray="8 12" opacity="0.6"/><circle cx="300" cy="300" r="110" fill="%2306b6d4" opacity="0.35"/><circle cx="300" cy="300" r="40" fill="%23f8fafc" opacity="0.9"/></svg>`
+    },
+    {
+      id: 3,
+      title: 'Velvet Raindrops',
+      artist: 'Noc Nocturne',
+      duration: 145,
+      theme: {
+        glow: 'rgba(99, 102, 241, 0.4)',
+        accent1: '#3b82f6',
+        accent2: '#a855f7',
+        orb1: '#3b82f6',
+        orb2: '#9333ea',
+        orb3: '#6366f1'
+      },
+      bpm: 88,
+      chords: [349.23, 440.00, 523.25, 659.25], // Fmaj7
+      coverSvg: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><linearGradient id="g4" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="%231e1b4b"/><stop offset="60%" stop-color="%234338ca"/><stop offset="100%" stop-color="%23c084fc"/></linearGradient></defs><rect width="600" height="600" fill="url(%23g4)"/><circle cx="160" cy="180" r="110" fill="%23a855f7" opacity="0.45"/><circle cx="440" cy="400" r="150" fill="%233b82f6" opacity="0.35"/></svg>`
+    }
+  ];
+
+  // State
+  let currentIndex = 0;
+  let isPlaying = false;
+  let isMuted = false;
+  let currentVolume = 0.75;
+  let isShuffle = false;
+  let isLoop = false;
+  let isLiked = false;
+  let currentTimeSec = 0;
+  let playbackTimer = null;
+
+  // Web Audio Synthesis Engine (Generates warm, melodic lo-fi / chill soundscapes)
+  let audioCtx = null;
+  let masterGain = null;
+  let analyser = null;
+  let synthInterval = null;
+  let stepIndex = 0;
+
+  function initAudioEngine() {
+    if (audioCtx) return;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass();
+
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+
+    masterGain = audioCtx.createGain();
+    masterGain.gain.setValueAtTime(currentVolume, audioCtx.currentTime);
+
+    masterGain.connect(analyser);
+    analyser.connect(audioCtx.destination);
+  }
+
+  function playSynthChord(track) {
+    if (!audioCtx || !isPlaying) return;
+
+    const baseChord = track.chords;
+    const root = baseChord[stepIndex % baseChord.length];
+    stepIndex++;
+
+    // Sub bass note
+    playTone(root / 2, 'sine', 1.8, 0.22, 120);
+
+    // Warm chord note with low-pass warmth
+    const midNote = baseChord[(stepIndex + 1) % baseChord.length];
+    playTone(midNote, 'triangle', 2.0, 0.12, 600);
+
+    // Soft melody sparkle
+    if (Math.random() > 0.3) {
+      setTimeout(() => {
+        if (!isPlaying || !audioCtx) return;
+        const spark = baseChord[Math.floor(Math.random() * baseChord.length)] * 2;
+        playTone(spark, 'sine', 1.2, 0.08, 1200);
+      }, 400);
+    }
+  }
+
+  function playTone(freq, type, duration, gainVal, filterFreq) {
+    try {
+      const osc = audioCtx.createOscillator();
+      const noteGain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(filterFreq, audioCtx.currentTime);
+
+      // Smooth envelope attack and release
+      const now = audioCtx.currentTime;
+      noteGain.gain.setValueAtTime(0, now);
+      noteGain.gain.linearRampToValueAtTime(gainVal, now + 0.12);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(filter);
+      filter.connect(noteGain);
+      noteGain.connect(masterGain);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  function startMusicLoop() {
+    if (synthInterval) clearInterval(synthInterval);
+    const track = TRACKS[currentIndex];
+    const intervalMs = (60 / track.bpm) * 1000 * 2;
+    playSynthChord(track);
+    synthInterval = setInterval(() => {
+      playSynthChord(track);
+    }, intervalMs);
+  }
+
+  function stopMusicLoop() {
+    if (synthInterval) {
+      clearInterval(synthInterval);
+      synthInterval = null;
+    }
+  }
+
+  // DOM Elements
+  const playerCard = document.getElementById('playerCard');
+  const albumCover = document.getElementById('albumCover');
+  const trackTitle = document.getElementById('trackTitle');
+  const trackArtist = document.getElementById('trackArtist');
+  const playBtn = document.getElementById('playBtn');
+  const playIcon = document.getElementById('playIcon');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const loopBtn = document.getElementById('loopBtn');
+  const likeBtn = document.getElementById('likeBtn');
+  const progressBar = document.getElementById('progressBar');
+  const progressFill = document.getElementById('progressFill');
+  const currentTimeEl = document.getElementById('currentTime');
+  const totalDurationEl = document.getElementById('totalDuration');
+  const volTrack = document.getElementById('volTrack');
+  const volFill = document.getElementById('volFill');
+  const volBtn = document.getElementById('volBtn');
+  const volIcon = document.getElementById('volIcon');
+  const playlistToggle = document.getElementById('playlistToggle');
+  const playlistDrawer = document.getElementById('playlistDrawer');
+  const closeDrawer = document.getElementById('closeDrawer');
+  const drawerList = document.getElementById('drawerList');
+  const orb1 = document.getElementById('orb1');
+  const orb2 = document.getElementById('orb2');
+  const orb3 = document.getElementById('orb3');
+  const vizCanvas = document.getElementById('vizCanvas');
+  const vizCtx = vizCanvas.getContext('2d');
+
+  function formatTime(seconds) {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+  }
+
+  function loadTrack(index) {
+    currentIndex = index;
+    const track = TRACKS[currentIndex];
+
+    trackTitle.textContent = track.title;
+    trackArtist.textContent = track.artist;
+    albumCover.src = track.coverSvg;
+    currentTimeSec = 0;
+    updateProgressUI();
+
+    totalDurationEl.textContent = formatTime(track.duration);
+
+    // Dynamic Atmosphere Glow
+    playerCard.style.setProperty('--card-glow', track.theme.glow);
+    orb1.style.background = `radial-gradient(circle, ${track.theme.orb1} 0%, transparent 70%)`;
+    orb2.style.background = `radial-gradient(circle, ${track.theme.orb2} 0%, transparent 70%)`;
+    orb3.style.background = `radial-gradient(circle, ${track.theme.orb3} 0%, transparent 70%)`;
+
+    renderPlaylistItems();
+
+    if (isPlaying) {
+      startMusicLoop();
+    }
+  }
+
+  function togglePlay() {
+    initAudioEngine();
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    isPlaying = !isPlaying;
+
+    if (isPlaying) {
+      playerCard.classList.add('playing');
+      playIcon.innerHTML = `<rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect>`;
+      startMusicLoop();
+      startPlaybackTimer();
+    } else {
+      playerCard.classList.remove('playing');
+      playIcon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
+      stopMusicLoop();
+      stopPlaybackTimer();
+    }
+  }
+
+  function startPlaybackTimer() {
+    stopPlaybackTimer();
+    playbackTimer = setInterval(() => {
+      currentTimeSec++;
+      const track = TRACKS[currentIndex];
+      if (currentTimeSec >= track.duration) {
+        if (isLoop) {
+          currentTimeSec = 0;
+        } else {
+          nextTrack();
+          return;
+        }
+      }
+      updateProgressUI();
+    }, 1000);
+  }
+
+  function stopPlaybackTimer() {
+    if (playbackTimer) {
+      clearInterval(playbackTimer);
+      playbackTimer = null;
+    }
+  }
+
+  function updateProgressUI() {
+    const track = TRACKS[currentIndex];
+    const percent = Math.min((currentTimeSec / track.duration) * 100, 100);
+    progressFill.style.width = `${percent}%`;
+    currentTimeEl.textContent = formatTime(currentTimeSec);
+  }
+
+  function nextTrack() {
+    let nextIndex;
+    if (isShuffle) {
+      do {
+        nextIndex = Math.floor(Math.random() * TRACKS.length);
+      } while (nextIndex === currentIndex && TRACKS.length > 1);
+    } else {
+      nextIndex = (currentIndex + 1) % TRACKS.length;
+    }
+    loadTrack(nextIndex);
+  }
+
+  function prevTrack() {
+    if (currentTimeSec > 4) {
+      currentTimeSec = 0;
+      updateProgressUI();
+      return;
+    }
+    const prevIndex = (currentIndex - 1 + TRACKS.length) % TRACKS.length;
+    loadTrack(prevIndex);
+  }
+
+  // Seeking on Progress Bar
+  progressBar.addEventListener('click', (e) => {
+    const rect = progressBar.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(clickX / rect.width, 1));
+    const track = TRACKS[currentIndex];
+    currentTimeSec = Math.floor(ratio * track.duration);
+    updateProgressUI();
+  });
+
+  // Volume Adjustment
+  function setVolume(val) {
+    currentVolume = Math.max(0, Math.min(val, 1));
+    volFill.style.width = `${currentVolume * 100}%`;
+    if (masterGain && audioCtx) {
+      masterGain.gain.setValueAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime);
+    }
+    updateVolumeIcon();
+  }
+
+  function updateVolumeIcon() {
+    if (isMuted || currentVolume === 0) {
+      volIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>`;
+    } else if (currentVolume < 0.5) {
+      volIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+    } else {
+      volIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+    }
+  }
+
+  volTrack.addEventListener('click', (e) => {
+    const rect = volTrack.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    isMuted = false;
+    setVolume(clickX / rect.width);
+  });
+
+  volBtn.addEventListener('click', () => {
+    isMuted = !isMuted;
+    if (masterGain && audioCtx) {
+      masterGain.gain.setValueAtTime(isMuted ? 0 : currentVolume, audioCtx.currentTime);
+    }
+    updateVolumeIcon();
+  });
+
+  // Button Listeners
+  playBtn.addEventListener('click', togglePlay);
+  nextBtn.addEventListener('click', nextTrack);
+  prevBtn.addEventListener('click', prevTrack);
+
+  shuffleBtn.addEventListener('click', () => {
+    isShuffle = !isShuffle;
+    shuffleBtn.classList.toggle('active', isShuffle);
+  });
+
+  loopBtn.addEventListener('click', () => {
+    isLoop = !isLoop;
+    loopBtn.classList.toggle('active', isLoop);
+  });
+
+  likeBtn.addEventListener('click', () => {
+    isLiked = !isLiked;
+    likeBtn.classList.toggle('liked', isLiked);
+  });
+
+  // Playlist View Drawer
+  function renderPlaylistItems() {
+    drawerList.innerHTML = '';
+    TRACKS.forEach((track, i) => {
+      const item = document.createElement('div');
+      item.className = `track-item ${i === currentIndex ? 'active' : ''}`;
+      item.innerHTML = `
+        <img class="track-item-img" src="${track.coverSvg}" alt="${track.title}" />
+        <div class="track-item-info">
+          <div class="track-item-name">${track.title}</div>
+          <div class="track-item-sub">${track.artist}</div>
+        </div>
+        <div class="track-item-duration">${formatTime(track.duration)}</div>
+      `;
+      item.addEventListener('click', () => {
+        loadTrack(i);
+        if (!isPlaying) togglePlay();
+        playlistDrawer.classList.remove('open');
+      });
+      drawerList.appendChild(item);
+    });
+  }
+
+  playlistToggle.addEventListener('click', () => {
+    playlistDrawer.classList.add('open');
+  });
+
+  closeDrawer.addEventListener('click', () => {
+    playlistDrawer.classList.remove('open');
+  });
+
+  // Canvas Visualizer Loop
+  function resizeCanvas() {
+    vizCanvas.width = vizCanvas.parentElement.clientWidth;
+    vizCanvas.height = vizCanvas.parentElement.clientHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function drawVisualizer() {
+    requestAnimationFrame(drawVisualizer);
+    vizCtx.clearRect(0, 0, vizCanvas.width, vizCanvas.height);
+
+    const barCount = 32;
+    const barWidth = vizCanvas.width / barCount;
+    let dataArray = new Uint8Array(barCount);
+
+    if (analyser && isPlaying) {
+      analyser.getByteFrequencyData(dataArray);
+    } else {
+      // Idle breathing ambient wave
+      const time = Date.now() * 0.003;
+      for (let i = 0; i < barCount; i++) {
+        dataArray[i] = (Math.sin(time + i * 0.3) * 0.5 + 0.5) * 22;
+      }
+    }
+
+    for (let i = 0; i < barCount; i++) {
+      const heightPercent = dataArray[i] / 255;
+      const barHeight = Math.max(3, heightPercent * vizCanvas.height * 0.85);
+
+      const x = i * barWidth;
+      const y = vizCanvas.height - barHeight;
+
+      const gradient = vizCtx.createLinearGradient(0, y, 0, vizCanvas.height);
+      gradient.addColorStop(0, 'rgba(236, 72, 153, 0.85)');
+      gradient.addColorStop(1, 'rgba(139, 92, 246, 0.15)');
+
+      vizCtx.fillStyle = gradient;
+      vizCtx.beginPath();
+      vizCtx.roundRect(x + 1.5, y, barWidth - 3, barHeight, [4, 4, 0, 0]);
+      vizCtx.fill();
+    }
+  }
+
+  // Keyboard Navigation Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      togglePlay();
+    } else if (e.code === 'ArrowRight') {
+      nextTrack();
+    } else if (e.code === 'ArrowLeft') {
+      prevTrack();
+    }
+  });
+
+  // Init
+  loadTrack(0);
+  drawVisualizer();
+</script>
